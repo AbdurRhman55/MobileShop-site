@@ -1,0 +1,153 @@
+<?php
+/**
+* Admin — order detail.
+*
+* @var array $order @var array $items
+*
+* Read-only: there is no status-update POST route registered, so this page
+* shows the order exactly as it was placed rather than offering a control that
+* would submit nowhere.
+*/
+$statusMeta = [
+    'pending'   => [ 'bg' => 'bg-gold-400',     'fg' => 'text-navy-900', 'label' => 'Pending' ],
+    'processing'=> [ 'bg' => 'bg-electric-100', 'fg' => 'text-electric-800', 'label' => 'Processing' ],
+    'confirmed' => [ 'bg' => 'bg-electric-500', 'fg' => 'text-white',    'label' => 'Confirmed' ],
+    'shipped'   => [ 'bg' => 'bg-violet-500',   'fg' => 'text-white',    'label' => 'Shipped' ],
+    'delivered' => [ 'bg' => 'bg-jade-500',     'fg' => 'text-white',    'label' => 'Delivered' ],
+    'cancelled' => [ 'bg' => 'bg-flame-500',    'fg' => 'text-white',    'label' => 'Cancelled' ],
+    'refunded'  => [ 'bg' => 'bg-surface-sunken', 'fg' => 'text-ink-muted', 'label' => 'Refunded' ],
+];
+$status = ( string ) $order[ 'status' ];
+$meta   = $statusMeta[ $status ] ?? [ 'bg' => 'bg-electric-500', 'fg' => 'text-white', 'label' => ucfirst( $status ) ];
+?>
+<a href = '/admin/orders' class = 'btn btn-ghost btn-sm'>
+<svg viewBox = '0 0 24 24' fill = 'none' stroke = 'currentColor' stroke-width = '2' class = 'h-4 w-4'><path d = 'M19 12H5M11 18l-6-6 6-6'/></svg>
+All orders
+</a>
+
+<header class = 'mt-5 flex flex-wrap items-center justify-between gap-3'>
+<div>
+<p class = 'text-[12px] font-extrabold uppercase tracking-[0.18em] text-electric-600'>Order detail</p>
+<h1 class = 'mt-1 flex flex-wrap items-center gap-3 text-[26px] font-extrabold tracking-tight text-ink'>
+<?= e( $order[ 'reference' ] ) ?>
+<span class = "badge <?= e($meta['bg']) ?> <?= e($meta['fg']) ?> px-2.5 py-1.5 !text-[12px]"><?= e( $meta[ 'label' ] ) ?></span>
+</h1>
+</div>
+<p class = 'text-[13px] text-ink-muted'>Placed <?= e( date( 'd M Y, H:i', strtotime( $order[ 'created_at' ] ) ) ) ?></p>
+</header>
+
+<div class = 'mt-6 grid gap-5 lg:grid-cols-3'>
+<!-- ===  ===  ===  ===  ===  ===  ===  ===  ===  == Line items ===  ===  ===  ===  ===  ===  ===  ===  ===  == -->
+<section class = 'card overflow-hidden lg:col-span-2' aria-labelledby = 'items-heading'>
+<h2 id = 'items-heading' class = 'border-b border-line px-5 py-4 text-[15px] font-extrabold text-ink sm:px-6'>
+Items
+<span class = 'ml-2 badge badge-soft px-2 py-1 !text-[11px]'><?= count( $items ) ?></span>
+</h2>
+
+<div class = 'overflow-x-auto'>
+<table class = 'data-table'>
+<caption class = 'sr-only'>Items in order <?= e( $order[ 'reference' ] ) ?></caption>
+<thead>
+<tr>
+<th scope = 'col'>Item</th>
+<th scope = 'col'>Unit price</th>
+<th scope = 'col'>Qty</th>
+<th scope = 'col'>Line total</th>
+</tr>
+</thead>
+<tbody>
+<?php foreach ( $items as $it ): ?>
+<tr>
+<td data-label = 'Item' class = 'font-semibold text-ink'><?php if ( !empty( $it[ 'product_slug' ] ) ): ?><a class = 'hover:text-electric-700 hover:underline' href = "/product/<?= e($it['product_slug']) ?>" target = '_blank' rel = 'noopener'><?= e( $it[ 'item_name' ] ) ?></a><?php else: ?><?= e( $it[ 'item_name' ] ) ?><?php endif;
+?></td>
+<td data-label = 'Unit price' class = 'tabular-nums text-ink-muted'><?= price( $it[ 'unit_price' ] ) ?></td>
+<td data-label = 'Qty' class = 'tabular-nums'><?= ( int ) $it[ 'quantity' ] ?></td>
+<td data-label = 'Line total' class = 'whitespace-nowrap text-right font-bold tabular-nums text-ink'>
+<?= price( $it[ 'unit_price' ] * $it[ 'quantity' ] ) ?>
+</td>
+</tr>
+<?php endforeach;
+?>
+</tbody>
+</table>
+</div>
+
+<dl class = 'space-y-2.5 border-t border-line px-5 py-4 text-[14px] sm:px-6'>
+<div class = 'flex items-baseline justify-between gap-3'>
+<dt class = 'text-ink-muted'>Subtotal</dt>
+<dd class = 'font-bold tabular-nums text-ink'><?= price( $order[ 'subtotal' ] ) ?></dd>
+</div>
+<div class = 'flex items-baseline justify-between gap-3'>
+<dt class = 'text-ink-muted'>Delivery</dt>
+<dd class = 'font-bold tabular-nums text-ink'>
+<?= $order[ 'shipping' ] > 0 ? price( $order[ 'shipping' ] ) : '<span class="text-jade-600">Free</span>' ?>
+</dd>
+</div>
+<div class = 'flex items-baseline justify-between gap-3 border-t border-line pt-3'>
+<dt class = 'text-[15px] font-bold text-ink'>Total</dt>
+<dd class = 'text-[22px] font-extrabold tabular-nums tracking-tight text-ink'><?= price( $order[ 'total' ] ) ?></dd>
+</div>
+</dl>
+</section>
+
+<!-- ===  ===  ===  ===  ===  ===  ===  ===  ===  === Customer ===  ===  ===  ===  ===  ===  ===  ===  ===  === -->
+<aside class = 'space-y-5'>
+<section class = 'card p-5 sm:p-6' aria-labelledby = 'customer-heading'>
+<h2 id = 'customer-heading' class = 'text-[15px] font-extrabold text-ink'>Customer</h2>
+
+<dl class = 'mt-4 space-y-3.5 text-[14px]'>
+<div>
+<dt class = 'text-[11.5px] font-bold uppercase tracking-wide text-ink-muted'>Name</dt>
+<dd class = 'mt-0.5 font-bold text-ink'><?= e( $order[ 'customer_name' ] ) ?></dd>
+<?php if ( !empty( $order[ 'account_customer_id' ] ) ): ?>
+<dd class = 'mt-1'><a href = "/admin/customers/<?= (int) $order['account_customer_id'] ?>" class = 'text-[12px] font-bold text-electric-600 hover:underline'>Open customer profile →</a></dd>
+<?php endif;
+?>
+</div>
+<div>
+<dt class = 'text-[11.5px] font-bold uppercase tracking-wide text-ink-muted'>Phone</dt>
+<dd class = 'mt-0.5'>
+<a href = "tel:<?= e(preg_replace('/[^0-9+]/', '', $order['phone'])) ?>" class = 'font-bold text-electric-600 hover:text-electric-700'><?= e( $order[ 'phone' ] ) ?></a>
+</dd>
+</div>
+<?php if ( !empty( $order[ 'email' ] ) ): ?>
+<div>
+<dt class = 'text-[11.5px] font-bold uppercase tracking-wide text-ink-muted'>Email</dt>
+<dd class = 'mt-0.5 break-all font-semibold text-ink'>
+<a href = "mailto:<?= e($order['email']) ?>" class = 'text-electric-600 hover:text-electric-700'><?= e( $order[ 'email' ] ) ?></a>
+</dd>
+</div>
+<?php endif;
+?>
+<div>
+<dt class = 'text-[11.5px] font-bold uppercase tracking-wide text-ink-muted'>Address</dt>
+<dd class = 'mt-0.5 leading-relaxed text-ink'><?= e( $order[ 'address' ] ) ?><br><span class = 'text-ink-muted'><?= e( $order[ 'city' ] ) ?></span></dd>
+</div>
+</dl>
+</section>
+
+<section class = 'card p-5 sm:p-6' aria-labelledby = 'payment-heading'>
+<h2 id = 'payment-heading' class = 'text-[15px] font-extrabold text-ink'>Payment &amp;
+fulfilment</h2>
+
+<dl class = 'mt-4 space-y-3.5 text-[14px]'>
+<div class = 'flex items-center justify-between gap-3'>
+<dt class = 'text-ink-muted'>Method</dt>
+<dd><span class = 'badge badge-soft px-2.5 py-1 !text-[11.5px]'><?= e( strtoupper( ( string ) $order[ 'payment_method' ] ) ) ?></span></dd>
+</div>
+<div class = 'flex items-center justify-between gap-3'>
+<dt class = 'text-ink-muted'>Status</dt>
+<dd><span class = "badge <?= e($meta['bg']) ?> <?= e($meta['fg']) ?> px-2.5 py-1 !text-[11.5px]"><?= e( $meta[ 'label' ] ) ?></span></dd>
+</div>
+<div class = 'flex items-center justify-between gap-3'>
+<dt class = 'text-ink-muted'>Reference</dt>
+<dd class = 'font-mono text-[13px] font-bold text-ink'><?= e( $order[ 'reference' ] ) ?></dd>
+</div>
+</dl>
+
+<p class = 'mt-4 rounded-xl border border-line bg-surface px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-muted'>
+Status changes are managed through the order workflow — this view is a faithful record of what the customer submitted.
+</p>
+</section>
+</aside>
+</div>

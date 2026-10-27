@@ -1,0 +1,15 @@
+{
+  "name": "lala-mobiles",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lala Mobiles e-commerce site with a production SEO system.",
+  "scripts": {
+    "build": "npm run build:css",
+    "build:css": "tailwindcss -i ./resources/css/input.css -o ./public/assets/css/app.css --minify",
+    "watch:css": "tailwindcss -i ./resources/css/input.css -o ./public/assets/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0"
+  }
+}

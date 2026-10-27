@@ -1,0 +1,24 @@
+# Environment / secrets
+config/.env
+
+# Dependencies
+/node_modules/
+
+# Build output (regenerate with `npm run build:css`)
+/public/assets/css/app.css
+/public/assets/css/app.css.map
+
+# Runtime caches
+/storage/cache/*
+!/storage/cache/.gitkeep
+
+# OS / editor noise
+Thumbs.db
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
